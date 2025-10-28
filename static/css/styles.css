@@ -18,8 +18,8 @@ h3{
 }
 
 #container{
-    width: 1000px;
-    height: 1000px;
+    width: 800px;
+    height: 800px;
     display: flex;
     flex-wrap: wrap;
     align-content: center;
@@ -27,13 +27,14 @@ h3{
     background-color: rgb(222, 184, 135, 0.3);
     border-radius: 50px;
     margin: 25px;
-    padding: 25px;
+    padding: 20px;
 }
 
 #info_container img{
     width: 96px;
     height: 96px;
     margin-right: 10px;
+    cursor: pointer;
 }
 
 #restart_info{
@@ -45,17 +46,34 @@ h3{
 
 .cell{
     background-color: #93c572;
-    height: 90px;
-    width: 90px;
+    height: 70px;
+    width: 70px;
     margin: 5px;
     border-radius: 10px;
     box-shadow: -2px -1px 5px 1px rgba(34, 60, 80, 0.1);
     transition: all 0.2s ease;
+    background-size: 0px;
+    transform: scale(1);
 }
 
-.cell:hover{
+.cell.setted{
+    background-color: #AD8A64
+}
+
+.cell.start, .cell.end {
+    background-color: #8f6a4e
+}
+
+.cell.active{
+    background-image: url("/static/img/snake.webp");
+    background-position: center;
+    background-size: contain;
+}
+
+.cell.hover:hover{
     transform: scale(1.1);
     background-color: #90cf66;
+    cursor: pointer;
 }
 
 #info_container {
@@ -75,3 +93,4 @@ h3{
 #restart_container{
     display: flex;
 }
+
