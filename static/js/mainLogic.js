@@ -65,6 +65,8 @@ window.cellEventListener = (event) => {
 
     const activeCells = document.querySelectorAll('#container .cell.active')
     const cells = document.querySelectorAll('#container .cell')
+
+    console.log(activeCells.length)
     if (activeCells.length > 0){
         cells.forEach(hEl => removeStylesActiveCell(hEl))
 
@@ -100,8 +102,8 @@ function setHover(cells, hover=false){
     })
 }
 
-async function getBlock(el1, el2){
-    const response = await fetch(`/api/blocks?el1=${el1}&el2=${el2}`, {
+async function checkWay(el1, el2){
+    const response = await fetch(`/api/check?el1=${el1}&el2=${el2}`, {
         method: "GET",
         credentials: "same-origin"
     })
@@ -119,18 +121,7 @@ async function getBlock(el1, el2){
     }
 }
 
-// Часть ответсвенная за построение маршрута
-async function setRoute(el1, el2){
-    const container = document.getElementById('container')
-    const cells = container.querySelectorAll('.cell')
-
-    setHover(cells)
-    
-    const indexEl1 = Array.from(cells).indexOf(el1)
-    const indexEl2 = Array.from(cells).indexOf(el2)
-
-    await getBlock(indexEl1, indexEl2)
-
+async function setHtmlMatrix(cells, el1){
     let matrix = []
 
     for (let i=0; i < 10; i++){
@@ -146,56 +137,54 @@ async function setRoute(el1, el2){
         matrix.push(tempMatrix)
     }
 
-    console.log(matrix)
+    return matrix
+}
 
-    // Теперь находим короткий путь
-    let rowIndexEl1 = indexEl1 % 10
-    let rowIndexEl2 = indexEl2 % 10
-    let columnIndexEl1 = Math.trunc(indexEl1 / 10)
-    let columnIndexEl2 = Math.trunc(indexEl2 / 10)
+async function setNewCell(matrix, htmlMatrix){
+    const tasks = [];
 
-    // Двигаемся от первого элемента
-    while (true){
-        let check=0
-        // Проверяем горизонталь
-        let left=false
+    for (let i=0; i < 100; i++){
+        console.log('setNewCell', i)
+        const y = Math.trunc(i / 10) || 0 // row
+        const x = i % 10 || 0 // column
 
-        if (rowIndexEl1 > rowIndexEl2) left=true
+        console.log(y, x)
 
-        // Проверяем вертикаль
-        let down=false
+        console.log(matrix[y][x])
+        console.log(htmlMatrix[y][x])
 
-        if (columnIndexEl1 > columnIndexEl2) down=true
+        const el = htmlMatrix[y][x]
 
-        check++
-        
-
-        if (rowIndexEl1 !== rowIndexEl2){
-            rowIndexEl1 += left ? -1 : 1
-
-            if (await checkRC(matrix[columnIndexEl1][rowIndexEl1])){
-                break
-            }
-        }
-        
-        if (columnIndexEl1 !== columnIndexEl2){
-            columnIndexEl1 += down ? -1 : 1
-
-            if (await checkRC(matrix[columnIndexEl1][rowIndexEl1])){
-                break
-            }
+        if (matrix[y][x] === 2){
+            el.classList.add('block')
         }
 
-        if (rowIndexEl1 === rowIndexEl2 && columnIndexEl1 === columnIndexEl2){
-            console.log('Второй элемент найден. Игра завершена.')
-            matrix[columnIndexEl2][rowIndexEl2].classList.add('end')
-        
-            return true
+        if (matrix[y][x] === 1){
+            tasks.push(checkRC(el)); // стартуем задачу
+            await sleep(200);
         }
-
     }
 
-    // Сделать препятствия
+    await Promise.allSettled(tasks);
+}
+
+// Часть ответсвенная за построение маршрута
+async function setRoute(el1, el2){
+    
+    const container = document.getElementById('container')
+    const cells = container.querySelectorAll('.cell')
+
+    setHover(cells)
+
+    const indexEl1 = Array.from(cells).indexOf(el1)
+    const indexEl2 = Array.from(cells).indexOf(el2)
+
+    const matrix = (await checkWay(indexEl1, indexEl2))?.matrix
+    const htmlMatrix = await setHtmlMatrix(cells, indexEl1)
+
+    console.log(matrix, htmlMatrix)
+
+    await setNewCell(matrix, htmlMatrix)
 }
 
 setMainLogic()

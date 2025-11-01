@@ -2,6 +2,7 @@ from fastapi import FastAPI, Response, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from utils import set_random_blocks_matrix, set_way
 import uuid
 
 sessions = {}
@@ -41,13 +42,8 @@ async def root() -> HTMLResponse:
 
     return response
 
-@app.get("/api/blocks")
-async def random_blocks(request: Request, el1: int, el2: int) -> dict:
-    column_el1 = int(el1 / 10)
-    row_el1 = int(el1 % 10)
-    column_el2 = int(el2 / 10)
-    row_el2 = int(el2 % 10)
-
+@app.get("/api/check")
+async def route_matrix(request: Request, el1: int, el2: int) -> dict:
     session_id = request.cookies.get('sessionid')
     print(session_id, el1, el2)
 
@@ -55,18 +51,22 @@ async def random_blocks(request: Request, el1: int, el2: int) -> dict:
         raise HTTPException(status_code=401, detail="Сессия не найдена")
 
     if 99 >= el1 >= 0 and 99 >= el2 >= 0:
-        if 'matrix' in sessions[session_id]:
-            del sessions[session_id]['matrix']
+        # if 'matrix' in sessions[session_id]:
+        #     del sessions[session_id]['matrix']
 
-        matrix = [row[:] for row in matrix_null]
-        matrix[column_el1][row_el1] = 1
-        matrix[column_el2][row_el2] = 1
-        sessions[session_id]['matrix'] = matrix
-        print(sessions[session_id]['matrix'])
+        # matrix[column_el1][row_el1] = 1
+        # matrix[column_el2][row_el2] = 1
+        try:
+            sessions[session_id]['matrix'] = set_way([row[:] for row in matrix_null], el1, el2)
+            print('session matrix')
+            for i in sessions[session_id]['matrix']:
+                print(i)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Произошла ошибка на сервере при обработке запроса. {e}")
     else:
         raise HTTPException(status_code=400, detail="Индексы el1 и el2 должны быть от 0 до 99 включительно")
 
-    return {"blocks": {}}
+    return {"matrix": sessions[session_id]['matrix']}
 
 @app.get("/apples")
 async def random_apples():

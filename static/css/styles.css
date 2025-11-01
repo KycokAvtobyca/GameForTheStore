@@ -60,6 +60,10 @@ h3{
     background-color: #AD8A64
 }
 
+.cell.block{
+    background-color: #963232;
+}
+
 .cell.start, .cell.end {
     background-color: #8f6a4e
 }
