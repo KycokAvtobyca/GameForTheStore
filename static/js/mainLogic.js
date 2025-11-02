@@ -1,6 +1,3 @@
-import setRandomApples from './apples.js'
-import setBlocks from './blocks.js'
-
 function setMainLogic(){
     const container = document.getElementById('container')
 
@@ -11,11 +8,8 @@ function setMainLogic(){
 
         container.appendChild(el)
     }
-
-    setRandomApples()
 }
 
-// Часть отвественная за логику клика на клетку
 const intervals = new WeakMap()
 
 function intervalSettedCell(cell){
@@ -67,11 +61,9 @@ window.cellEventListener = (event) => {
     const activeCells = document.querySelectorAll('#container .cell.active')
     const cells = document.querySelectorAll('#container .cell')
 
-    console.log(activeCells.length)
     if (activeCells.length > 0){
         cells.forEach(hEl => removeStylesActiveCell(hEl))
 
-        // Дальнейшая логика на построение маршрута
         setRoute(activeCells[0], el)
 
         return
@@ -142,6 +134,23 @@ async function setHtmlMatrix(cells, el1){
     return matrix
 }
 
+async function setBlocks(indexEl1, indexEl2, htmlMatrix, matrix){
+    let firstEl = htmlMatrix[Math.trunc(indexEl1 / 10)][indexEl1 % 10];
+    let secondEl = htmlMatrix[Math.trunc(indexEl2 / 10)][indexEl2 % 10]
+
+    for (let i=0; i < 100; i++){
+        let y = Math.trunc(i / 10)
+        let x = i % 10
+
+        if (matrix[y][x] === 1 && matrix[y][x] !== firstEl && matrix[y][x] !== secondEl){
+            htmlMatrix[y][x].classList.add('setted')
+        }
+    }
+
+    firstEl.classList.add('start')
+    secondEl.classList.add('end')
+}
+
 async function setNewCell(matrix, htmlMatrix, indexEl1, indexEl2){
     for (let i=0; i < 100; i++){
         const y = Math.trunc(i / 10) || 0 // row
@@ -157,7 +166,6 @@ async function setNewCell(matrix, htmlMatrix, indexEl1, indexEl2){
 }
 
 async function setRoute(el1, el2){
-    
     const container = document.getElementById('container')
     const cells = container.querySelectorAll('.cell')
 
@@ -168,8 +176,6 @@ async function setRoute(el1, el2){
 
     const matrix = (await checkWay(indexEl1, indexEl2))?.matrix
     const htmlMatrix = await setHtmlMatrix(cells, indexEl1)
-
-    console.log(matrix, htmlMatrix)
 
     await setNewCell(matrix, htmlMatrix, indexEl1, indexEl2)
 }

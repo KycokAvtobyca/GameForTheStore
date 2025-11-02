@@ -2,7 +2,7 @@ from fastapi import FastAPI, Response, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-from utils import set_random_blocks_matrix, set_way
+from utils import set_way
 import uuid
 
 sessions = {}
@@ -12,9 +12,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5500"], # Разрешает запросы с любых доменов
-    allow_methods=["GET"], # Разрешает любые HTTP-методы (GET, POST, PUT...)
-    allow_headers=["*"], # Разрешает любые заголовки (например Content-Type, Authorization)
+    allow_origins=["http://localhost:5500"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
     allow_credentials=True
 )
 
@@ -50,14 +50,8 @@ async def route_matrix(request: Request, el1: int, el2: int) -> dict:
         raise HTTPException(status_code=401, detail="Сессия не найдена")
 
     if 99 >= el1 >= 0 and 99 >= el2 >= 0:
-        # if 'matrix' in sessions[session_id]:
-        #     del sessions[session_id]['matrix']
-
-        # matrix[column_el1][row_el1] = 1
-        # matrix[column_el2][row_el2] = 1
         try:
             sessions[session_id]['matrix'] = set_way([row[:] for row in matrix_null], el1, el2)
-            print('session matrix')
             for i in sessions[session_id]['matrix']:
                 print(i)
         except Exception as e:
@@ -66,8 +60,4 @@ async def route_matrix(request: Request, el1: int, el2: int) -> dict:
         raise HTTPException(status_code=400, detail="Индексы el1 и el2 должны быть от 0 до 99 включительно")
 
     return {"matrix": sessions[session_id]['matrix']}
-
-@app.get("/apples")
-async def random_apples():
-    return {"apples": {}}
 

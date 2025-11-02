@@ -68,12 +68,6 @@ h3{
     background-color: #8f6a4e
 }
 
-.cell.active{
-    background-image: url("/static/img/snake.webp");
-    background-position: center;
-    background-size: contain;
-}
-
 .cell.hover:hover{
     transform: scale(1.1);
     background-color: #90cf66;
@@ -83,7 +77,7 @@ h3{
 #info_container {
     display: flex;
     align-items: flex-start;
-    justify-content: space-between;
+    justify-content: flex-end;
     flex-wrap: wrap;
     margin: 25px 0;
     flex-direction: column;
@@ -97,4 +91,3 @@ h3{
 #restart_container{
     display: flex;
 }
-

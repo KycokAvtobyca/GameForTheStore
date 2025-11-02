@@ -1,79 +1,128 @@
 import random
+from collections import deque
 
-def set_random_blocks_matrix(matrix):
+
+# Удаляет старые 2 и генерирует новые змейки из 2
+def set_random_blocks_matrix(matrix, forbidden=None):
+    if forbidden is None:
+        forbidden = set()
+
+    for ry in range(len(matrix)):
+        for rx in range(len(matrix[0])):
+            if matrix[ry][rx] == 2:
+                matrix[ry][rx] = 0
+
+    rows = len(matrix)
+    cols = len(matrix[0])
+
     for f in range(random.randint(5, 8)):
-        x = random.randint(0, 9)
-        y = random.randint(0, 9)
+        attempts = 0
+        while True:
+            x = random.randint(0, cols - 1)
+            y = random.randint(0, rows - 1)
+            attempts += 1
+            if (y, x) not in forbidden and matrix[y][x] != 2:
+                break
+            if attempts > 100:
+                break
 
-        print('blocks', f)
+        if attempts > 100:
+            continue
 
         matrix[y][x] = 2
-        
+
         block_length = random.randint(3, 7)
-        print('block_length', block_length)
-        for _ in range(block_length-1):
+        for _ in range(block_length - 1):
             directions = []
-            
-            if x < 9:
+            if x < cols - 1:
                 directions.append((1, 0))
             if x > 0:
                 directions.append((-1, 0))
-            if y < 9:
+            if y < rows - 1:
                 directions.append((0, 1))
             if y > 0:
                 directions.append((0, -1))
 
-            if directions:
-                dx, dy = random.choice(directions)
-                x += dx
-                y += dy
-                matrix[y][x] = 2
-            else:
+            if not directions:
                 break
 
-def set_way(matrix, el1, el2):
-    set_random_blocks_matrix(matrix)
-    print(matrix)
+            dx, dy = random.choice(directions)
+            nx, ny = x + dx, y + dy
 
-    y, x = divmod(el1, 10)
-    target_y, target_x = divmod(el2, 10)
+            # не перекрываем forbidden
+            if (ny, nx) in forbidden:
+                break
 
-    check = 0
+            x, y = nx, ny
+            matrix[y][x] = 2
 
-    while True:
-        if (matrix[y][x] == 2):
-            return matrix
-        elif check == 0:
-            matrix[y][x] = 1
-            check += 1
+# BFS: если путь найден - помечаем путь значением 1 и возвращаем True.
+# Если не найден - возвращаем False (без изменений 1)
+def dev_alg(matrix, start_y, start_x, target_x, target_y):
+    rows = len(matrix)
+    cols = len(matrix[0])
+    queue = deque([(start_x, start_y, [])])
+    visited = set()
+
+    while queue:
+        x, y, path = queue.popleft()
+
+        if (x, y) in visited or matrix[y][x] == 2:
             continue
-        
-        print('check while', matrix)
 
-        left = False
-        down = False
+        if x == target_x and y == target_y:
+            for px, py in path + [(x, y)]:
+                matrix[py][px] = 1
+            return True
 
-        if x > target_x:
-            left = True
-        
-        if y > target_y:
-            down = True
-        
-        if x != target_x:
-            x += -1 if left else 1
+        visited.add((x, y))
 
-            if matrix[y][x] == 2:
-                return matrix
+        for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < cols and 0 <= ny < rows and (nx, ny) not in visited and matrix[ny][nx] != 2:
+                queue.append((nx, ny, path + [(x, y)]))
 
-            matrix[y][x] = 1
+    # путь не найден
+    return False
 
-        if y != target_y:
-            y += -1 if down else 1
+def _clear_marks(matrix):
+    """Убираем старые метки пути (1) и старт (3) перед новой попыткой"""
+    for ry in range(len(matrix)):
+        for rx in range(len(matrix[0])):
+            if matrix[ry][rx] in (1, 3):
+                matrix[ry][rx] = 0
 
-            if matrix[y][x] == 2:
-                return matrix
 
-            matrix[y][x] = 1
+# Основная функция по логике:
+# генерирует препятствия,
+# если старт/цель == 2 - генерирует заново,
+# если путь не найден - генерирует заново,
+# возвращает матрицу с помеченным путем (1) и стартом (3) либо текущее состояние после max_attempts
+def set_way(matrix, el1, el2, max_attempts=100):
+    rows = len(matrix)
+    cols = len(matrix[0])
 
-        if y == target_y and x == target_x:
+    start_y, start_x = divmod(el1, cols)
+    target_y, target_x = divmod(el2, cols)
+    forbidden = {(start_y, start_x), (target_y, target_x)}
+
+    for attempt in range(1, max_attempts + 1):
+        _clear_marks(matrix)
+
+        set_random_blocks_matrix(matrix, forbidden=forbidden)
+
+        if matrix[start_y][start_x] == 2 or matrix[target_y][target_x] == 2:
+            print(f"Попытка {attempt}: старт или цель оказались заблокированы — генерируем заново")
+            continue
+
+        matrix[start_y][start_x] = 3
+
+        found = dev_alg(matrix, start_y, start_x, target_x, target_y)
+        if found:
             return matrix
+        else:
+            print(f"Попытка {attempt}: путь не найден — генерируем заново")
+            continue
+
+    print("Не удалось найти путь за максимальное количество попыток.")
+    return matrix
