@@ -1,4 +1,5 @@
 import setRandomApples from './apples.js'
+import setBlocks from './blocks.js'
 
 function setMainLogic(){
     const container = document.getElementById('container')
@@ -85,7 +86,8 @@ function sleep(ms){
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-async function checkRC(el){
+export async function checkRC(el){
+    if (el.classList.contains('block')) return 
     el.style.transform = "scale(1.1)"
     el.classList.add('setted')
     await sleep(200)
@@ -140,35 +142,20 @@ async function setHtmlMatrix(cells, el1){
     return matrix
 }
 
-async function setNewCell(matrix, htmlMatrix){
-    const tasks = [];
-
+async function setNewCell(matrix, htmlMatrix, indexEl1, indexEl2){
     for (let i=0; i < 100; i++){
-        console.log('setNewCell', i)
         const y = Math.trunc(i / 10) || 0 // row
         const x = i % 10 || 0 // column
-
-        console.log(y, x)
-
-        console.log(matrix[y][x])
-        console.log(htmlMatrix[y][x])
-
         const el = htmlMatrix[y][x]
 
         if (matrix[y][x] === 2){
             el.classList.add('block')
         }
-
-        if (matrix[y][x] === 1){
-            tasks.push(checkRC(el)); // стартуем задачу
-            await sleep(200);
-        }
     }
 
-    await Promise.allSettled(tasks);
+    await setBlocks(indexEl1, indexEl2, htmlMatrix, matrix)
 }
 
-// Часть ответсвенная за построение маршрута
 async function setRoute(el1, el2){
     
     const container = document.getElementById('container')
@@ -184,7 +171,7 @@ async function setRoute(el1, el2){
 
     console.log(matrix, htmlMatrix)
 
-    await setNewCell(matrix, htmlMatrix)
+    await setNewCell(matrix, htmlMatrix, indexEl1, indexEl2)
 }
 
 setMainLogic()

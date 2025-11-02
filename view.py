@@ -21,7 +21,6 @@ app.add_middleware(
 ROWS = 10
 COLUMNS = 10
 matrix_null = [[0 for _ in range(COLUMNS)] for _ in range(ROWS)]
-matrix = None
 
 @app.get("/")
 async def root() -> HTMLResponse:
